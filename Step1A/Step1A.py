@@ -21,7 +21,7 @@ def get_task(ID):
                     'title': task["title"], 'description': task["description"], 'done': task["done"]})
 
 
-@app.route('/tasks/', methods=['POST'])
+@app.route('/tasks/add', methods=['POST'])
 def add_task():
     mongo.db.tasks.insert(
         {'_id': get_task_id(), 'title': request.form['title'],
@@ -29,11 +29,11 @@ def add_task():
     return 'Success!'
 
 
-@app.route('/tasks/<int:ID>', methods=['PUT'])
+@app.route('/tasks/update/<int:ID>', methods=['PUT'])
 def update_task(ID):
     tasks = mongo.db.tasks
-    task = tasks.find_one({'_id': request.form['task_id']})
-    data = json.load(request.data)
+    task = tasks.find_one({'_id': ID})
+    data = request.get_json()
     if 'title' in data:
         task["title"] = data['title']
     if 'description' in data:
@@ -44,7 +44,7 @@ def update_task(ID):
     return get_tasks_list()
 
 
-@app.route('/task/<int:ID>', methods=['DELETE'])
+@app.route('/tasks/delete/<int:ID>', methods=['DELETE'])
 def delete_task(ID):
     mongo.db.tasks.delete_one({'_id': ID})
     return 'Task deleted successfully!'
@@ -53,7 +53,7 @@ def delete_task(ID):
 @app.route('/')
 def index():
     return """
-    <form action="/task/add" method="POST">
+    <form action="/tasks/add" method="POST">
         <input type="text" name="title" placeholder="Title"><br>
         <input type="text" name="description" placeholder="Description"><br>
         <input type="text" name="done" placeholder="Status"><br>
