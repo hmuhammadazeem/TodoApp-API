@@ -2,8 +2,7 @@ from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb://localhost:27017/myDatabase"
-mongo = PyMongo(app)
+mongo = PyMongo(app, uri=" mongodb://127.0.0.1:27017/Todo-API")
 
 
 @app.route("/tasks", methods=['GET'])
@@ -21,13 +20,20 @@ def get_task(_id):
 
 @app.route('/tasks', methods=['POST'])
 def add_task():
-
-
+    mongo.db.tasks.insert(
+        {'title': request.form['title'], 'description': request.form['description'], 'done': request.form['done']})
+    return 'Success!'
 
 
 @app.route('/task/<id>', methods=['PUT'])
-def update_task(id):
-    pass
+def update_task(_id):
+    tasks = mongo.db.tasks
+    task = tasks.find_one({'id': _id})
+    task["title"] = request.form['title']
+    task["description"] = request.form['description']
+    task["done"] = request.form['done']
+    tasks.save(task)
+    return get_tasks_list()
 
 
 @app.route('/tasks/<id>', methods=['DELETE'])
