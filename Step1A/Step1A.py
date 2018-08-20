@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
-import bson
+import json
 
 app = Flask(__name__)
 mongo = PyMongo(app, uri="mongodb://127.0.0.1:27017/Todo-API")
@@ -14,14 +14,14 @@ def get_tasks_list():
     return jsonify({'Tasks': data_list})
 
 
-@app.route('/task/<int:ID>', methods=['GET'])
+@app.route('/tasks/<int:ID>', methods=['GET'])
 def get_task(ID):
     task = mongo.db.tasks.find_one_or_404({'_id': ID})
     return jsonify({'_id': int(task['_id']),
                     'title': task["title"], 'description': task["description"], 'done': task["done"]})
 
 
-@app.route('/task/add', methods=['POST'])
+@app.route('/tasks/', methods=['POST'])
 def add_task():
     mongo.db.tasks.insert(
         {'_id': get_task_id(), 'title': request.form['title'],
@@ -29,18 +29,22 @@ def add_task():
     return 'Success!'
 
 
-@app.route('/task/update', methods=['PUT'])
-def update_task():
+@app.route('/tasks/<int:ID>', methods=['PUT'])
+def update_task(ID):
     tasks = mongo.db.tasks
     task = tasks.find_one({'_id': request.form['task_id']})
-    task["title"] = request.form['title']
-    task["description"] = request.form['description']
-    task["done"] = request.form['done']
+    data = json.load(request.data)
+    if 'title' in data:
+        task["title"] = data['title']
+    if 'description' in data:
+        task["description"] = data['description']
+    if 'done' in data:
+        task["done"] = data['done']
     tasks.save(task)
     return get_tasks_list()
 
 
-@app.route('/task/delete/<int:ID>', methods=['DELETE'])
+@app.route('/task/<int:ID>', methods=['DELETE'])
 def delete_task(ID):
     mongo.db.tasks.delete_one({'_id': ID})
     return 'Task deleted successfully!'
@@ -58,6 +62,7 @@ def index():
     """
 
 
+# function written to provide the functionality of auto-number feature of SQL
 def get_task_id():
     value = mongo.db.counter
     id = value.find_one({'_id': 'taskid'})
