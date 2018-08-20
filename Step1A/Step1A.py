@@ -34,12 +34,8 @@ def update_task(ID):
     tasks = mongo.db.tasks
     task = tasks.find_one({'_id': ID})
     data = request.get_json()
-    if 'title' in data:
-        task["title"] = data['title']
-    if 'description' in data:
-        task["description"] = data['description']
-    if 'done' in data:
-        task["done"] = data['done']
+    for x in data.keys():
+        task[x] = data[x]
     tasks.save(task)
     return get_tasks_list()
 
