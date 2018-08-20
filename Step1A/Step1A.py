@@ -37,13 +37,15 @@ def update_task(_id):
 
 
 @app.route('/tasks/<id>', methods=['DELETE'])
-def delete_task(id):
-    pass
+def delete_task(_id):
+    tasks = mongo.db.tasks
+    task = tasks.find_one({'id': _id})
+    task.remove()
+    return 'Task deleted successfully!'
+
 
 if __name__ == '__main__':
     app.run()
-
-
 
 
 
