@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 
 app = Flask(__name__)
-mongo = PyMongo(app, uri=" mongodb://127.0.0.1:27017/Todo-API")
+mongo = PyMongo(app, uri="mongodb://127.0.0.1:27017/Todo-API")
 
 
 @app.route("/tasks", methods=['GET'])
@@ -43,6 +43,16 @@ def delete_task(_id):
     task.remove()
     return 'Task deleted successfully!'
 
+
+@app.route('/')
+def index():
+    return """
+    <form action="/todo/api/v1.0/tasks" method="POST">
+    <input type="text" name="title" placeholder="title"><br>
+    <input type="text" name="description" placeholder="description"><br>
+    <input type="text" name="done" placeholder="done"><br>
+    <input type="submit" value="Send"> 
+    """
 
 if __name__ == '__main__':
     app.run()
