@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
+import bson
 
 app = Flask(__name__)
 mongo = PyMongo(app, uri="mongodb://127.0.0.1:27017/Todo-API")
@@ -13,22 +14,22 @@ def get_tasks_list():
 
 
 @app.route('/tasks/<id>', methods=['GET'])
-def get_task(_id):
-    task = mongo.db.tasks.find_one_or_404({"id": _id})
+def get_task(id):
+    task = mongo.db.tasks.find_one_or_404({'_id': bson.ObjectId(oid=str(id))})
     return jsonify({'title': task["title"], 'description': task["description"], 'done': task["done"]})
 
 
 @app.route('/tasks', methods=['POST'])
 def add_task():
     mongo.db.tasks.insert(
-        {'title': request.form['title'], 'description': request.form['description'], 'done': request.form['done']})
+        {'_id': get_task_id(), 'title': request.form['title'], 'description': request.form['description'], 'done': request.form['done']})
     return 'Success!'
 
 
 @app.route('/task/<id>', methods=['PUT'])
-def update_task(_id):
+def update_task(id):
     tasks = mongo.db.tasks
-    task = tasks.find_one({'id': _id})
+    task = tasks.find_one({'_id': bson.ObjectId(oid=str(id))})
     task["title"] = request.form['title']
     task["description"] = request.form['description']
     task["done"] = request.form['done']
@@ -37,9 +38,9 @@ def update_task(_id):
 
 
 @app.route('/tasks/<id>', methods=['DELETE'])
-def delete_task(_id):
+def delete_task(id):
     tasks = mongo.db.tasks
-    task = tasks.find_one({'id': _id})
+    task = tasks.find_one({'_id': bson.ObjectId(oid=str(id))})
     task.remove()
     return 'Task deleted successfully!'
 
@@ -47,15 +48,29 @@ def delete_task(_id):
 @app.route('/')
 def index():
     return """
-    <form action="/todo/api/v1.0/tasks" method="POST">
-    <input type="text" name="title" placeholder="title"><br>
-    <input type="text" name="description" placeholder="description"><br>
-    <input type="text" name="done" placeholder="done"><br>
-    <input type="submit" value="Send"> 
+    <form action="/tasks" method="POST">
+        <input type="text" name="title" placeholder="Title"><br>
+        <input type="text" name="description" placeholder="Description"><br>
+        <input type="text" name="done" placeholder="Status"><br>
+        <input type="submit" value="Add"> 
+    </form>
     """
+
+
+def get_task_id():
+    value = mongo.db.counter
+    id = value.find_one({'_id': 'taskid'})
+    x = id['sequence_value']
+    id['sequence_value'] += 1
+    value.save(id)
+    return x
+
+
 
 if __name__ == '__main__':
     app.run()
+
+
 
 
 
